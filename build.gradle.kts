@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.tellusr"
-version = "0.9.1"
+version = "1.0"
 
 repositories {
     mavenCentral()

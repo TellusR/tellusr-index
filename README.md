@@ -228,7 +228,7 @@ val hits = index.search("instruction:translate AND response:Hello*")
 val english = index.search("language:en")
 
 // Pagination
-val page2 = index.search("category:translation", offset = 10, limit = 10)
+val page2 = index.search("category:translation", page = 2, pageSize = 10)
 
 `search()` returns a `List<Record>` and scores if you request them.
 
