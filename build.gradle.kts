@@ -11,9 +11,8 @@ repositories {
 }
 
 dependencies {
-    val ktor_version = "3.1.2"
+    val ktor_version = "3.1.3"
     implementation("io.ktor:ktor-serialization-kotlinx-json:${ktor_version}")
-    implementation(kotlin("reflect"))
 
     val serialization_version = "1.6.2"
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version")
@@ -27,10 +26,11 @@ dependencies {
     implementation("org.apache.lucene:lucene-analysis-common:$lucene_version")
     implementation("org.apache.lucene:lucene-backward-codecs:$lucene_version")
 
-    val logback_version = "1.5.13"
-    implementation("ch.qos.logback:logback-classic:${logback_version}")
+    val slf4j_version = "2.0.12"
+    implementation("org.slf4j:slf4j-api:$slf4j_version")
 
-
+    val logback_version = "1.5.18"
+    testImplementation("ch.qos.logback:logback-classic:${logback_version}")
     testImplementation(kotlin("test"))
 }
 
@@ -68,8 +68,12 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/tellusr/framework")
             credentials {
-                username = System.getenv("GITHUB_USERNAME")
-                password = System.getenv("GITHUB_TOKEN")
+                username = project.findProperty("gpr.user")?.toString()
+                    ?: System.getenv("GITHUB_USERNAME")
+                            ?: System.getenv("GH_USERNAME")
+                password = project.findProperty("gpr.key")?.toString()
+                    ?: System.getenv("GITHUB_TOKEN")
+                            ?: System.getenv("GH_TOKEN")
             }
         }
     }
