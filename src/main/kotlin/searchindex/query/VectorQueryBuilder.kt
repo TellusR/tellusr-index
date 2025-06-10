@@ -43,13 +43,13 @@ class VectorQueryBuilder(
  * Constructs a KNN (k-nearest neighbors) query for searching similar vectors in the
  * specified field and executes the search.
  *
- * @param vectorQuery The float array vector used for the KNN search.
+ * @param vectorSearch The float array vector used for the KNN search.
  * @param field Optional field within the index to apply the KNN search. If not specified,
  *             the first vector field in the schema will be used.
  * @param maxRows The maximum number of similar vectors to retrieve, default is 10.
  * @return A [SiHits] object containing the search results with vector similarity matches.
  */
-fun <TT: SiRecord> SiSearchInterface<TT>.vectorQuery(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10): SiHits<TT> =
+fun <TT: SiRecord> SiSearchInterface<TT>.vectorSearch(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10): SiHits<TT> =
     VectorQueryBuilder(
         this.schema, field, vectorQuery, maxRows
     ).build().let {
