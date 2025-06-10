@@ -29,7 +29,7 @@ abstract class SiSchema(
     val group: String,
     val fields: List<SiField>
 ) {
-    open val basePath: String? get() = defaultIndexPath
+    open val basePath: String? get() = SiSchema.rootPath
 
     open fun formFields(): List<SiField> = fields
 
@@ -215,8 +215,14 @@ abstract class SiSchema(
 
     companion object {
         val ALL: Int get() = Int.MAX_VALUE
-        val logger = getAutoNamedLogger()
 
-        val defaultIndexPath: String = "index"
+        var rootPath: String? = null
+
+        fun setRootPath(path: String) {
+            logger.info("Setting root path to $path")
+            rootPath = path
+        }
+
+        private val logger = getAutoNamedLogger()
     }
 }
