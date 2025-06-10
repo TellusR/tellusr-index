@@ -1,8 +1,6 @@
 package com.tellusr.searchindex
 
-import com.tellusr.searchindex.util.ConvertUtil
 import com.tellusr.searchindex.util.JsonExporter
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import org.apache.lucene.document.*

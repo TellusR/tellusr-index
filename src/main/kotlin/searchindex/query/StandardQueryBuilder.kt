@@ -5,7 +5,6 @@ import com.tellusr.searchindex.SiHits
 import com.tellusr.searchindex.SiQueryBuilder
 import com.tellusr.searchindex.SiRecord
 import com.tellusr.searchindex.SiSchema
-import com.tellusr.searchindex.SiSearchIndex
 import com.tellusr.searchindex.SiSearchInterface
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.queryparser.classic.QueryParser
@@ -49,9 +48,14 @@ class StandardQueryBuilder(val schema: SiSchema, val field: SiField, val phrase:
  *             Defaults to the schema's default search field.
  * @return A [SiHits] object containing the search results matching the query.
  */
-fun <TT: SiRecord> SiSearchInterface<TT>.standardQuery(phrase: String, field: SiField = schema.defaultSearchField): SiHits<TT> =
+fun <TT: SiRecord> SiSearchInterface<TT>.standardSearch(phrase: String, field: SiField = schema.defaultSearchField): SiHits<TT> =
     StandardQueryBuilder(
         this.schema, this.schema.defaultSearchField, phrase
     ).build().let {
         this.search(it) as SiHits<TT>
     }
+
+fun SiSchema.standardQuery(phrase: String, field: SiField = this.defaultSearchField): Query =
+    StandardQueryBuilder(
+        this, field, phrase
+    ).build()

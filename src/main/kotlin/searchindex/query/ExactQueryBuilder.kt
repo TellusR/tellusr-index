@@ -43,3 +43,8 @@ fun <TT: SiRecord> SiSearchInterface<TT>.exactSearch(q: String, field: SiField =
     ).build().let {
         this.search(it) as SiHits<TT>
     }
+
+fun SiSchema.exactQuery(q: String, field: SiField = this.defaultSearchField): Query =
+    ExactQueryBuilder(
+        this, field, q
+    ).build()

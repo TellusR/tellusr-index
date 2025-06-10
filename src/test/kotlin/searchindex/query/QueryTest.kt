@@ -5,24 +5,30 @@ import com.tellusr.searchindex.util.getAutoNamedLogger
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import java.io.File
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class QueryTest {
     private lateinit var index: TestStore.SearchIndex
-    private val testIndexName = "test-index"
+    private val testIndexName = "test-index-query"
 
     @BeforeAll
     fun setup() {
-        index = TestStore.SearchIndex(testIndexName)
+        try {
+            index = TestStore.SearchIndex(testIndexName)
+        }
+        catch (e: Exception) {
+            logger.error("Failed to create search index", e)
+            throw e
+        }
     }
 
     @AfterAll
     fun tearDown() {
         runBlocking {
             index.clear()
-            File(testIndexName).deleteRecursively()
+            index.close()
+            TestStore.Schema.path(testIndexName).toFile().deleteRecursively()
         }
     }
 
@@ -64,7 +70,7 @@ class QueryTest {
             val id = "term1"
             index.add(TestStore.Record(id, "specific term search", "context", "response", null, null))
 
-            val results = index.termQuery("term", TestStore.Fields.Instruction)
+            val results = index.termSearch("term", TestStore.Fields.Instruction)
 
             assertTrue(results.isNotEmpty())
             assertEquals(id, results.docs.first().id)
@@ -77,8 +83,8 @@ class QueryTest {
             val id = "term2"
             index.add(TestStore.Record(id, "UPPERCASE term", "context", "response", null, null))
 
-            val upperResults = index.termQuery("UPPERCASE", TestStore.Fields.Instruction)
-            val lowerResults = index.termQuery("uppercase", TestStore.Fields.Instruction)
+            val upperResults = index.termSearch("UPPERCASE", TestStore.Fields.Instruction)
+            val lowerResults = index.termSearch("uppercase", TestStore.Fields.Instruction)
 
             assertTrue(upperResults.isNotEmpty())
             assertTrue(lowerResults.isNotEmpty())
@@ -145,7 +151,7 @@ class QueryTest {
             index.add(TestStore.Record(id, "vector test", "context", "response", null, null, null, vectorized = vector))
 
             val searchVector = FloatArray(128) { 0.1f }  // Similar vector for search
-            val results = index.vectorQuery(searchVector, TestStore.Fields.Vectorized)
+            val results = index.vectorSearch(searchVector, TestStore.Fields.Vectorized)
 
             assertTrue(results.isNotEmpty())
             assertEquals(id, results.docs.first().id)

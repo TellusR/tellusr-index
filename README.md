@@ -52,8 +52,12 @@ repositories {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/tellusr/framework")
         credentials {
-            username = project.findProperty("gpr.user")?.toString() ?: System.getenv("GITHUB_USERNAME")
-            password = project.findProperty("gpr.key")?.toString() ?: System.getenv("GITHUB_TOKEN")
+            username = project.findProperty("gpr.user")?.toString()
+                ?: System.getenv("GITHUB_USERNAME")
+                ?: System.getenv("GH_USERNAME")
+            password = project.findProperty("gpr.key")?.toString()
+                ?: System.getenv("GITHUB_TOKEN")
+                ?: System.getenv("GH_TOKEN")
         }
     }
 }
