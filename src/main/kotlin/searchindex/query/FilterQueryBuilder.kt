@@ -28,6 +28,12 @@ class FilterQueryBuilder(val schema: SiSchema, val query: Query, val filterQueri
     }
 }
 
+fun SiSchema.filterQuery(query: Query, filterQuery: Query?): Query = filterQuery?.let { f ->
+    FilterQueryBuilder(
+        this, query, f
+    ).build()
+} ?: query
+
 
 fun SiSchema.filterQuery(query: Query, filter: String?): Query = filter?.let { f ->
     FilterQueryBuilder(
