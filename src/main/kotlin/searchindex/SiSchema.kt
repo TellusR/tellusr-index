@@ -218,11 +218,6 @@ abstract class SiSchema(
 
         var rootPath: String? = null
 
-        fun setRootPath(path: String) {
-            logger.info("Setting root path to $path")
-            rootPath = path
-        }
-
         private val logger = getAutoNamedLogger()
     }
 }
