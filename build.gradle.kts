@@ -12,12 +12,14 @@ repositories {
 
 dependencies {
     val serialization_version = "1.8.1"
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version")
-
     val coroutines_version = "1.10.2"
+    val lucene_version = "10.2.1"
+    val slf4j_version = "2.0.12"
+    val logback_version = "1.5.18"
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
 
-    val lucene_version = "10.2.0"
     implementation("org.apache.lucene:lucene-core:$lucene_version")
     implementation("org.apache.lucene:lucene-queryparser:$lucene_version")
     implementation("org.apache.lucene:lucene-queries:$lucene_version")
@@ -25,10 +27,8 @@ dependencies {
     implementation("org.apache.lucene:lucene-analysis-common:$lucene_version")
     implementation("org.apache.lucene:lucene-backward-codecs:$lucene_version")
 
-    val slf4j_version = "2.0.12"
     implementation("org.slf4j:slf4j-api:$slf4j_version")
 
-    val logback_version = "1.5.18"
     testImplementation("ch.qos.logback:logback-classic:${logback_version}")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${coroutines_version}")
     testImplementation(kotlin("test"))
@@ -48,6 +48,7 @@ tasks.test {
         "--add-modules", "jdk.incubator.vector",
         "--enable-native-access=ALL-UNNAMED"
     )
+    testLogging.showStandardStreams = true
 }
 kotlin {
     jvmToolchain(21)

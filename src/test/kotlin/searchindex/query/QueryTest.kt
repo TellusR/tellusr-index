@@ -5,24 +5,31 @@ import com.tellusr.searchindex.util.getAutoNamedLogger
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import java.io.File
+import java.util.UUID
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class QueryTest {
     private lateinit var index: TestStore.SearchIndex
-    private val testIndexName = "test-index"
+    private val testIndexName = "test-index-${UUID.randomUUID()}"
 
     @BeforeAll
     fun setup() {
-        index = TestStore.SearchIndex(testIndexName)
+        try {
+            index = TestStore.SearchIndex(testIndexName)
+        }
+        catch (e: Exception) {
+            logger.error("Failed to create search index", e)
+            throw e
+        }
     }
 
     @AfterAll
     fun tearDown() {
         runBlocking {
             index.clear()
-            File(testIndexName).deleteRecursively()
+            index.close()
+            TestStore.Schema.path(testIndexName).toFile().deleteRecursively()
         }
     }
 

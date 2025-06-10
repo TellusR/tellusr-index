@@ -109,11 +109,17 @@ open class SiSearchIndex<TT : SiRecord>(
                 "Created the same index again: $fullName ${this::class.simpleName}"
             )
         }
+        logger.debug("Created index: {}", fullName)
         existingIndexNames.add(fullName)
 
         initIndex()
     }
 
+
+    fun close() {
+        searchManager.close()
+        existingIndexNames.remove(qualifiedName())
+    }
 
     private var searchManager: SearcherManager = createSearchManager()
 
