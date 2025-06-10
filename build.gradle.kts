@@ -61,10 +61,15 @@ publishing {
 
             groupId = group as String
             artifactId = "tellusr-searchindex"
+            artifact(tasks.register("sourcesJar", Jar::class) {
+                from(sourceSets["main"].allSource)
+                archiveClassifier.set("sources")
+            })
             version = version as String
         }
     }
     repositories {
+        mavenLocal()
         maven {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/tellusr/framework")
