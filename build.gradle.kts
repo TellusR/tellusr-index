@@ -11,12 +11,11 @@ repositories {
 }
 
 dependencies {
-    val ktor_version = "3.1.3"
-    implementation("io.ktor:ktor-serialization-kotlinx-json:${ktor_version}")
-
-    val serialization_version = "1.6.2"
+    val serialization_version = "1.8.1"
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-hocon:$serialization_version")
+
+    val coroutines_version = "1.10.2"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
 
     val lucene_version = "10.2.0"
     implementation("org.apache.lucene:lucene-core:$lucene_version")
@@ -31,6 +30,7 @@ dependencies {
 
     val logback_version = "1.5.18"
     testImplementation("ch.qos.logback:logback-classic:${logback_version}")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${coroutines_version}")
     testImplementation(kotlin("test"))
 }
 
