@@ -1,7 +1,6 @@
 package com.tellusr.searchindex
 
 import com.tellusr.searchindex.tool.SiConstraint
-import com.tellusr.searchindex.tool.SiFilterClause
 import kotlinx.serialization.json.*
 import com.tellusr.searchindex.util.getAutoNamedLogger
 import org.apache.lucene.analysis.Analyzer
@@ -11,8 +10,6 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute
 import org.apache.lucene.document.*
 import org.apache.lucene.index.Term
-import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser
 import org.apache.lucene.search.*
 import java.nio.file.Path
 import java.nio.file.Paths
