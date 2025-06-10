@@ -54,3 +54,8 @@ fun <TT: SiRecord> SiSearchInterface<TT>.standardSearch(phrase: String, field: S
     ).build().let {
         this.search(it) as SiHits<TT>
     }
+
+fun SiSchema.standardQuery(phrase: String, field: SiField = this.defaultSearchField): Query =
+    StandardQueryBuilder(
+        this, field, phrase
+    ).build()

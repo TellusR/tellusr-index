@@ -38,3 +38,11 @@ fun <TT : SiRecord> SiSearchInterface<TT>.termSearch(
     ).build().let {
         this.search(it) as SiHits<TT>
     }
+
+fun SiSchema.termQuery(
+    phrase: String,
+    field: SiField = this.defaultSearchField,
+    clause: BooleanClause.Occur = BooleanClause.Occur.SHOULD
+): Query = TermQueryBuilder(
+    this, field, phrase, clause
+).build()

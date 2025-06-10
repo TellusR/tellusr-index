@@ -64,3 +64,9 @@ fun <TT : SiRecord> SiSearchInterface<TT>.keySearch(phrase: String, field: SiFie
     this.search(it) as SiHits<TT>
 }
 
+fun SiSchema.keyQuery(
+    phrase: String,
+    field: SiField = this.defaultSearchField
+): Query = KeyQueryBuilder(
+    this, field, phrase
+).build()

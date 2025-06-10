@@ -1,6 +1,8 @@
 package com.tellusr.searchindex.query
 
+import com.tellusr.searchindex.SiField
 import com.tellusr.searchindex.SiQueryBuilder
+import com.tellusr.searchindex.SiSchema
 import org.apache.lucene.search.BooleanClause
 import org.apache.lucene.search.BooleanQuery
 import org.apache.lucene.search.Query
@@ -30,3 +32,11 @@ class BooleanQueryBuilder(
         }.build()
     }
 }
+
+
+fun SiSchema.booleanQuery(
+    queries: List<Query>,
+    clause: BooleanClause.Occur = BooleanClause.Occur.SHOULD
+): Query = BooleanQueryBuilder(
+    queries, clause
+).build()

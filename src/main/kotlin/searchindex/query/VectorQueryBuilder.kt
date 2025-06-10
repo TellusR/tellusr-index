@@ -56,3 +56,8 @@ fun <TT: SiRecord> SiSearchInterface<TT>.vectorSearch(vectorQuery: FloatArray, f
         this.search(it) as SiHits<TT>
     }
 
+
+fun SiSchema.vectorQuery(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10): Query =
+    VectorQueryBuilder(
+        this, field, vectorQuery, maxRows
+    ).build()

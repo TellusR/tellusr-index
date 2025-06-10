@@ -6,6 +6,7 @@ import com.tellusr.searchindex.SiQueryBuilder
 import com.tellusr.searchindex.SiRecord
 import com.tellusr.searchindex.SiSchema
 import com.tellusr.searchindex.SiSearchInterface
+import org.apache.lucene.search.BooleanClause
 import org.apache.lucene.search.PhraseQuery
 import org.apache.lucene.search.Query
 
@@ -54,3 +55,11 @@ fun <TT: SiRecord> SiSearchInterface<TT>.phraseSearch(phrase: String, field: SiF
     ).build().let {
         this.search(it) as SiHits<TT>
     }
+
+
+fun SiSchema.phraseQuery(
+    phrase: String,
+    field: SiField = this.defaultSearchField
+): Query = PhraseQueryBuilder(
+    this, field, phrase
+).build()
