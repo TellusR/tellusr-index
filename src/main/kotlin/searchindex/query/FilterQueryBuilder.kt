@@ -42,12 +42,10 @@ fun SiSchema.filterQuery(query: Query, filter: String?): Query = filter?.let { f
 } ?: query
 
 
-fun SiSchema.filterQuery(q: Query, filterQueries: List<SiFilterClause>?) = filterQueries?.ifEmpty {
+fun SiSchema.filterQuery(query: Query, filterQueries: List<SiFilterClause>?): Query = filterQueries?.ifEmpty {
     null
 }?.let {
     FilterQueryBuilder(
-        this, q, it
-    )
-}
-
-
+        this, query, it
+    ).build()
+} ?: query
