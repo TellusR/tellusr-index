@@ -6,7 +6,6 @@ import com.tellusr.searchindex.SiHits
 import com.tellusr.searchindex.SiQueryBuilder
 import com.tellusr.searchindex.SiRecord
 import com.tellusr.searchindex.SiSchema
-import com.tellusr.searchindex.SiSearchIndex
 import com.tellusr.searchindex.SiSearchInterface
 import org.apache.lucene.index.Term
 import org.apache.lucene.search.MatchNoDocsQuery
