@@ -22,7 +22,7 @@ interface TestStore {
     }
 
 
-    object Schema : SiSchema("tuning", Fields.entries) {
+    object Schema : SiSchema("unit-test", Fields.entries) {
         override fun fromDoc(doc: Document): SiRecord = Record(doc)
         override fun fromJson(jsonObject: JsonObject): Record = json.decodeFromJsonElement<Record>(jsonObject)
     }
