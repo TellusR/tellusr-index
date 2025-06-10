@@ -6,12 +6,13 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import java.io.File
+import java.util.UUID
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CRUDTest {
     private lateinit var index: TestStore.SearchIndex
-    private val testIndexName = "test-index"
+    private val testIndexName = "test-index-crud"
 
     @BeforeAll
     fun setup() {
@@ -22,7 +23,8 @@ class CRUDTest {
     fun tearDown() {
         runBlocking {
             index.clear()
-            File(testIndexName).deleteRecursively()
+            index.close()
+            TestStore.Schema.path(testIndexName).toFile().deleteRecursively()
         }
     }
 

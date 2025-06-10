@@ -11,7 +11,7 @@ import java.util.UUID
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class QueryTest {
     private lateinit var index: TestStore.SearchIndex
-    private val testIndexName = "test-index-${UUID.randomUUID()}"
+    private val testIndexName = "test-index-query"
 
     @BeforeAll
     fun setup() {
