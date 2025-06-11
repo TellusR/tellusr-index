@@ -27,8 +27,8 @@ open class SiJoinToMany<T1 : SiRecord, T2 : SiRecord>(
 
     override val size: Int get() = primary.size
 
-    override fun all(page: Int, pageSize: Int): SiHits<SiOneToMany<T1, T2>> {
-        val hits = primary.all(pageSize)
+    override fun all(start: Int, rows: Int): SiHits<SiOneToMany<T1, T2>> {
+        val hits = primary.all(rows)
         val joined = hits.docs.mapNotNull {
             toOneToMany(it)
         }
@@ -38,8 +38,8 @@ open class SiJoinToMany<T1 : SiRecord, T2 : SiRecord>(
     override val schema: SiSchema = SiCombinedSchema(primary.schema, secondary.schema)
 
 
-    override fun search(query: Query, page: Int, pageSize: Int, sort: Sort?): SiHits<SiOneToMany<T1, T2>> {
-        val hits = primary.search(query,  page, pageSize, sort)
+    override fun search(query: Query, start: Int, rows: Int, sort: Sort?): SiHits<SiOneToMany<T1, T2>> {
+        val hits = primary.search(query,  start, rows, sort)
         val joined = hits.docs.mapNotNull { one ->
             toOneToMany(one)
         }

@@ -23,6 +23,8 @@ import org.apache.lucene.util.BytesRef
 import java.nio.file.Path
 import java.nio.file.Files
 import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 
 
 /**
@@ -221,7 +223,7 @@ open class SiSearchIndex<TT : SiRecord>(
      *
      * @return A list of all documents in the index.
      */
-    override fun all(page: Int, pageSize: Int): SiHits<TT> = search(MatchAllDocsQuery(), page, pageSize)
+    override fun all(start: Int, rows: Int): SiHits<TT> = search(MatchAllDocsQuery(), start, rows)
 
 
     /**
@@ -263,12 +265,12 @@ open class SiSearchIndex<TT : SiRecord>(
      * and returns the results as SiHits.
      *
      * @param query The query to execute against the index.
-     * @param pageSize The maximum number of rows to return in the search results.
+     * @param rows The maximum number of rows to return in the search results.
      * @param sort (Optional) The sorting criteria for the results.
      * @return A SiHits instance containing the search results.
      */
-    override fun search(query: Query, page: Int, pageSize: Int, sort: Sort?): SiHits<TT> {
-        val rows = pageSize + page * pageSize
+    override fun search(query: Query, start: Int, rows: Int, sort: Sort?): SiHits<TT> {
+        val rows = start + rows
         logger.trace("Searching {}: {}", schema.path(name), query)
         return searcher<SiHits<TT>> { searcher ->
             val docs = sort?.let { sort ->
@@ -278,7 +280,15 @@ open class SiSearchIndex<TT : SiRecord>(
                 val doc = searcher.indexReader.storedFields().document(it.doc)
                 schema.fromDoc(doc) as TT
             }
-            SiHits(docs.totalHits, res.drop(page * pageSize).take(pageSize))
+
+            if(start < res.size) {
+                val takeCount = min(rows, res.size - start)
+                SiHits(docs.totalHits, res.drop(start).take(takeCount))
+            }
+            else {
+                SiHits(docs.totalHits, emptyList())
+
+            }
         }
     }
 
@@ -295,7 +305,7 @@ open class SiSearchIndex<TT : SiRecord>(
      */
     fun search(query: String, defaultField: SiField = schema.defaultSearchField): SiHits<TT> =
         StandardQueryBuilder(schema, defaultField, query).build().let {
-            search(it, page = 0, pageSize = SiSchema.ALL)
+            search(it, start = 0, rows = SiSchema.ALL)
         }
 
 
