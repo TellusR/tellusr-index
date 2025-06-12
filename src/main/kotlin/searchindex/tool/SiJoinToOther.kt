@@ -10,8 +10,8 @@ open class SiJoinToOther<T1: SiRecord, T2: SiRecord>(
     val secondary: SiSearchIndex<T2>,
     val foreignKeyField: SiField
 ) : SiSearchInterface<SiOneToOther<T1, T2>> {
-    override fun all(page: Int, pageSize: Int): SiHits<SiOneToOther<T1, T2>> {
-        val hits = primary.all(pageSize)
+    override fun all(start: Int, rows: Int): SiHits<SiOneToOther<T1, T2>> {
+        val hits = primary.all(rows)
         val joined = hits.docs.mapNotNull {
             toOneToOther(it)
         }
@@ -30,8 +30,8 @@ open class SiJoinToOther<T1: SiRecord, T2: SiRecord>(
         oneList.mapNotNull { one -> toOneToOther(one) }
 
 
-    override fun search(query: Query, page: Int, pageSize: Int, sort: Sort?): SiHits<SiOneToOther<T1, T2>> {
-        val hits = primary.search(query, page, pageSize, sort)
+    override fun search(query: Query, start: Int, rows: Int, sort: Sort?): SiHits<SiOneToOther<T1, T2>> {
+        val hits = primary.search(query, start, rows, sort)
         val joined = toOneToOtherList(hits.docs)
         return SiHits(hits.totalHits, joined)
     }

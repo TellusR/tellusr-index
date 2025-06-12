@@ -16,11 +16,11 @@ interface SiSearchInterface<TT : SiRecord> {
     /**
      * Retrieves all records from the search index with pagination support.
      *
-     * @param page The page number to retrieve (zero-based). Defaults to 0.
-     * @param pageSize The maximum number of records per page. Defaults to SiSchema.ALL.
+     * @param start First row to return. Defaults to 0.
+     * @param rows The maximum number of records to return. Defaults to SiSchema.ALL.
      * @return A SiHits object containing the matched records for the requested page.
      */
-    fun all(page: Int = 0, pageSize: Int = SiSchema.ALL): SiHits<TT>
+    fun all(start: Int = 0, rows: Int = SiSchema.ALL): SiHits<TT>
 
     /**
      * Returns the total number of records in the index.
@@ -41,10 +41,10 @@ interface SiSearchInterface<TT : SiRecord> {
      * Searches for records that match the given query criteria.
      *
      * @param query An object representing the search criteria.
-     * @param pageSize Max number of records to return
+     * @param rows Max number of records to return
      * @return A list of records matching the search criteria.
      */
-    fun search(query: Query, page: Int = 0, pageSize: Int = SiSchema.ALL, sort: Sort? = schema.defaultSort): SiHits<TT>
+    fun search(query: Query, start: Int = 0, rows: Int = SiSchema.ALL, sort: Sort? = schema.defaultSort): SiHits<TT>
 
 
     /**

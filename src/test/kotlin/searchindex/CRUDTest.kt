@@ -115,7 +115,7 @@ class CRUDTest {
             "Instruction:\"page test\""
         ).build()
 
-        val page = index.search(query, pageSize = 3)
+        val page = index.search(query, rows = 3)
 
         assertEquals(3, page.size())
     }
