@@ -28,7 +28,7 @@ open class SiJoinToMany<T1 : SiRecord, T2 : SiRecord>(
     override val size: Int get() = primary.size
 
     override fun all(start: Int, rows: Int): SiHits<SiOneToMany<T1, T2>> {
-        val hits = primary.all(rows)
+        val hits = primary.all(start, rows)
         val joined = hits.docs.mapNotNull {
             toOneToMany(it)
         }
