@@ -74,6 +74,7 @@ class SiDelayedUpdate<TT: SiRecord>(val searchIndex: SiSearchIndex<TT>) {
             logger.error(e.messageAndCrumb)
 
             // Reformat entries
+            logger.info("Reformatting index")
             searchIndex.create(searchIndex.all(Int.MAX_VALUE).docs)
             searchIndex.update(record)
         }
