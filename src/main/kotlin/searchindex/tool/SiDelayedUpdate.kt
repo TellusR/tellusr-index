@@ -39,9 +39,10 @@ class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
                         // Do not insert until there has been no inserts for two seconds, unless
                         // there is a reasonable number of entries to store
                         while (
-                            lastUpdateQueueInsert.isBefore(Instant.now().plusMillis(250))
-                            || (lastUpdateQueueInsert.isBefore(Instant.now().plusSeconds(2))
-                                    && updateQueue.size < 1000)
+                            lastUpdateQueueInsert.plusMillis(250).isAfter(Instant.now())
+                            || (lastUpdateQueueInsert.plusSeconds(2).isAfter(Instant.now())
+                                    && updateQueue.size < 1000
+                                    )
                         ) {
                             delay(250)
                         }
@@ -50,7 +51,7 @@ class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
                         queueMutex.withLock {
                             updateQueue = LinkedList()
                         }
-                        logger.info("Delayed storing records: ${oldQueue.size}")
+                        logger.info("Delayed update of ${oldQueue.size} records started")
 
                         // Write updates to the index
                         searchIndex.update(oldQueue)
