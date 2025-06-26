@@ -80,6 +80,23 @@ class SiDelayedUpdate<TT: SiRecord>(val searchIndex: SiSearchIndex<TT>) {
         }
     }
 
+    suspend fun update(records: List<TT>) {
+        try {
+            logger.info("Queuing record for delayed storage")
+            lastUpdateQueueInsert = Instant.now()
+            queueMutex.withLock {
+                updateQueue.addAll(records)
+            }
+            delayedUpdate()
+        } catch (e: IllegalArgumentException) {
+            logger.error(e.messageAndCrumb)
+
+            // Reformat entries
+            logger.info("Reformatting index")
+            searchIndex.create(searchIndex.all(Int.MAX_VALUE).docs)
+            searchIndex.update(records)
+        }
+    }
 
     companion object {
         val logger = getAutoNamedLogger()
