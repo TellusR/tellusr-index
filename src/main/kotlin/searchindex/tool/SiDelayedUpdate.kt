@@ -85,7 +85,7 @@ class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
 
     suspend fun update(records: List<TT>) {
         try {
-            logger.info("Queuing record for delayed storage")
+            logger.info("Queuing ${records.size} records for delayed storage")
             lastUpdateQueueInsert = Instant.now()
             queueMutex.withLock {
                 updateQueue.addAll(records)
