@@ -39,8 +39,9 @@ class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
                         // Do not insert until there has been no inserts for two seconds, unless
                         // there is a reasonable number of entries to store
                         while (
-                            lastUpdateQueueInsert.isBefore(Instant.now().plusSeconds(1))
-                                && updateQueue.size < 1000
+                            lastUpdateQueueInsert.isBefore(Instant.now().plusMillis(250))
+                            || (lastUpdateQueueInsert.isBefore(Instant.now().plusSeconds(2))
+                                    && updateQueue.size < 1000)
                         ) {
                             delay(250)
                         }
