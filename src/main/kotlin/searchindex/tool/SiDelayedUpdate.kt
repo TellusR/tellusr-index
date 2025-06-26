@@ -55,6 +55,7 @@ class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
 
                         // Write updates to the index
                         searchIndex.update(oldQueue)
+                        logger.info("Delayed update of ${oldQueue.size} records finished")
                     } finally {
                         //
                         updateMutex.unlock()
