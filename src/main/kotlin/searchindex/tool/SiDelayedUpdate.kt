@@ -22,7 +22,7 @@ import java.util.*
  *
  * @property delayMillis The delay in milliseconds before an update is performed.
  */
-class SiDelayedUpdate<TT: SiRecord>(val searchIndex: SiSearchIndex<TT>) {
+class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
     private var updateQueue: LinkedList<TT> = LinkedList()
     private var lastUpdateQueueInsert: Instant = Instant.now()
 
@@ -39,10 +39,10 @@ class SiDelayedUpdate<TT: SiRecord>(val searchIndex: SiSearchIndex<TT>) {
                         // Do not insert until there has been no inserts for two seconds, unless
                         // there is a reasonable number of entries to store
                         while (
-                            lastUpdateQueueInsert.isBefore(Instant.now().plusSeconds(2))
-                            && updateQueue.size < 100
+                            lastUpdateQueueInsert.isBefore(Instant.now().plusSeconds(1))
+                                && updateQueue.size < 1000
                         ) {
-                            delay(500)
+                            delay(250)
                         }
 
                         val oldQueue = updateQueue
