@@ -29,7 +29,7 @@ import java.util.*
  */
 class SiDelayedUpdate<TT : SiRecord>(
     val searchIndex: SiSearchIndex<TT>,
-    val taskContext: CoroutineDispatcher = Dispatchers.IO
+    val taskContext: CoroutineDispatcher = Dispatchers.Default
 ) {
     private var updateQueue: LinkedList<TT> = LinkedList()
     private var lastUpdateQueueInsert: Instant = Instant.now()
@@ -39,33 +39,35 @@ class SiDelayedUpdate<TT : SiRecord>(
     private val queueMutex = Mutex()
 
     private suspend fun delayedUpdate() {
-        // Start a delayed update if none is already running
-        if (updateMutex.tryLock()) {
-            withContext(taskContext) {
-                try {
-                    // Do not insert until there has been no inserts for two seconds, unless
-                    // there is a reasonable number of entries to store
-                    while (
-                        lastUpdateQueueInsert.plusMillis(250).isAfter(Instant.now())
-                        || (lastUpdateQueueInsert.plusSeconds(2).isAfter(Instant.now())
-                                && updateQueue.size < 1000
-                                )
-                    ) {
-                        delay(250)
-                    }
+        coroutineScope {
+            // Start a delayed update if none is already running
+            if (updateMutex.tryLock()) {
+                launch(taskContext) {
+                    try {
+                        // Do not insert until there has been no inserts for two seconds, unless
+                        // there is a reasonable number of entries to store
+                        while (
+                            lastUpdateQueueInsert.plusMillis(250).isAfter(Instant.now())
+                            || (lastUpdateQueueInsert.plusSeconds(2).isAfter(Instant.now())
+                                    && updateQueue.size < 1000
+                                    )
+                        ) {
+                            delay(250)
+                        }
 
-                    val oldQueue = updateQueue
-                    queueMutex.withLock {
-                        updateQueue = LinkedList()
-                    }
-                    logger.info("Delayed update of ${oldQueue.size} records started")
+                        val oldQueue = updateQueue
+                        queueMutex.withLock {
+                            updateQueue = LinkedList()
+                        }
+                        logger.info("Delayed update of ${oldQueue.size} records started")
 
-                    // Write updates to the index
-                    searchIndex.update(oldQueue)
-                    logger.info("Delayed update of ${oldQueue.size} records finished")
-                } finally {
-                    //
-                    updateMutex.unlock()
+                        // Write updates to the index
+                        searchIndex.update(oldQueue)
+                        logger.info("Delayed update of ${oldQueue.size} records finished")
+                    } finally {
+                        //
+                        updateMutex.unlock()
+                    }
                 }
             }
         }
