@@ -3,7 +3,6 @@ package com.tellusr.searchindex.tool
 import com.tellusr.searchindex.SiRecord
 import com.tellusr.searchindex.SiSearchIndex
 import com.tellusr.searchindex.util.getAutoNamedLogger
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -11,9 +10,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import com.tellusr.searchindex.exception.messageAndCrumb
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.util.*
@@ -28,8 +26,7 @@ import java.util.*
  * @property delayMillis The delay in milliseconds before an update is performed.
  */
 class SiDelayedUpdate<TT : SiRecord>(
-    val searchIndex: SiSearchIndex<TT>,
-    val taskContext: CoroutineDispatcher = Dispatchers.Default
+    val searchIndex: SiSearchIndex<TT>
 ) {
     private var updateQueue: LinkedList<TT> = LinkedList()
     private var lastUpdateQueueInsert: Instant = Instant.now()
@@ -39,18 +36,17 @@ class SiDelayedUpdate<TT : SiRecord>(
     private val queueMutex = Mutex()
 
     private suspend fun delayedUpdate() {
-        coroutineScope {
-            // Start a delayed update if none is already running
-            if (updateMutex.tryLock()) {
-                launch(taskContext) {
+        // Start a delayed update if none is already running
+        if (updateMutex.tryLock()) {
+            coroutineScope {
+                launch(Job()) {
                     try {
                         // Do not insert until there has been no inserts for two seconds, unless
                         // there is a reasonable number of entries to store
                         while (
                             lastUpdateQueueInsert.plusMillis(250).isAfter(Instant.now())
                             || (lastUpdateQueueInsert.plusSeconds(2).isAfter(Instant.now())
-                                    && updateQueue.size < 1000
-                                    )
+                                    && updateQueue.size < 1000)
                         ) {
                             delay(250)
                         }
