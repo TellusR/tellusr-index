@@ -11,7 +11,7 @@ open class SiJoinToOther<T1: SiRecord, T2: SiRecord>(
     val foreignKeyField: SiField
 ) : SiSearchInterface<SiOneToOther<T1, T2>> {
     override fun all(start: Int, rows: Int): SiHits<SiOneToOther<T1, T2>> {
-        val hits = primary.all(rows)
+        val hits = primary.all(start, rows)
         val joined = hits.docs.mapNotNull {
             toOneToOther(it)
         }

@@ -108,10 +108,10 @@ open class SiSearchIndex<TT : SiRecord>(
         val fullName = qualifiedName()
         if (existingIndexNames.contains(fullName)) {
             throw TellusRIndexException.SearchIndexError(
-                "Created the same index again: $fullName ${this::class.simpleName}"
+                "Initialized the same index again: $fullName ${this::class.simpleName}"
             )
         }
-        logger.debug("Created index: {}", fullName)
+        logger.debug("Initialized index: {}", fullName)
         existingIndexNames.add(fullName)
 
         initIndex()
@@ -133,7 +133,7 @@ open class SiSearchIndex<TT : SiRecord>(
 
         if (Files.exists(oldPath)) {
             if (!Files.exists(newPath)) {
-                logger.trace("Moving index from old to new path: {} -> {}", oldPath, newPath)
+                logger.warn("Moving index from old to new path: {} -> {}", oldPath, newPath)
                 Files.createDirectories(newPath.parent)
                 Files.move(oldPath, newPath)
             }
@@ -193,7 +193,7 @@ open class SiSearchIndex<TT : SiRecord>(
     }
 
 
-    private suspend fun writer(openMode: OpenMode = OpenMode.CREATE, task: (indexWriter: IndexWriter) -> Unit) =
+    private suspend fun writer(openMode: OpenMode = OpenMode.CREATE_OR_APPEND, task: (indexWriter: IndexWriter) -> Unit) =
         writeMutex.withLock {
             val directory: Directory = FSDirectory.open(schema.path(name))
             val analyzer: Analyzer = schema.analyser()

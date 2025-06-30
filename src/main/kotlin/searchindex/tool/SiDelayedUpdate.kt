@@ -22,7 +22,7 @@ import java.util.*
  *
  * @property delayMillis The delay in milliseconds before an update is performed.
  */
-class SiDelayedUpdate<TT: SiRecord>(val searchIndex: SiSearchIndex<TT>) {
+class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
     private var updateQueue: LinkedList<TT> = LinkedList()
     private var lastUpdateQueueInsert: Instant = Instant.now()
 
@@ -39,20 +39,23 @@ class SiDelayedUpdate<TT: SiRecord>(val searchIndex: SiSearchIndex<TT>) {
                         // Do not insert until there has been no inserts for two seconds, unless
                         // there is a reasonable number of entries to store
                         while (
-                            lastUpdateQueueInsert.isBefore(Instant.now().plusSeconds(2))
-                            && updateQueue.size < 100
+                            lastUpdateQueueInsert.plusMillis(250).isAfter(Instant.now())
+                            || (lastUpdateQueueInsert.plusSeconds(2).isAfter(Instant.now())
+                                    && updateQueue.size < 1000
+                                    )
                         ) {
-                            delay(500)
+                            delay(250)
                         }
 
                         val oldQueue = updateQueue
                         queueMutex.withLock {
                             updateQueue = LinkedList()
                         }
-                        logger.info("Delayed storing records: ${oldQueue.size}")
+                        logger.info("Delayed update of ${oldQueue.size} records started")
 
                         // Write updates to the index
                         searchIndex.update(oldQueue)
+                        logger.info("Delayed update of ${oldQueue.size} records finished")
                     } finally {
                         //
                         updateMutex.unlock()
@@ -74,11 +77,29 @@ class SiDelayedUpdate<TT: SiRecord>(val searchIndex: SiSearchIndex<TT>) {
             logger.error(e.messageAndCrumb)
 
             // Reformat entries
+            logger.info("Reformatting index")
             searchIndex.create(searchIndex.all(Int.MAX_VALUE).docs)
             searchIndex.update(record)
         }
     }
 
+    suspend fun update(records: List<TT>) {
+        try {
+            logger.info("Queuing ${records.size} records for delayed storage")
+            lastUpdateQueueInsert = Instant.now()
+            queueMutex.withLock {
+                updateQueue.addAll(records)
+            }
+            delayedUpdate()
+        } catch (e: IllegalArgumentException) {
+            logger.error(e.messageAndCrumb)
+
+            // Reformat entries
+            logger.info("Reformatting index")
+            searchIndex.create(searchIndex.all(Int.MAX_VALUE).docs)
+            searchIndex.update(records)
+        }
+    }
 
     companion object {
         val logger = getAutoNamedLogger()
