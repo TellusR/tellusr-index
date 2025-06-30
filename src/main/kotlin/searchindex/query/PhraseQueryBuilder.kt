@@ -49,7 +49,7 @@ class PhraseQueryBuilder(
  * @throws IllegalArgumentException if the field does not exist in schema
  * @throws IllegalStateException if the index is not readable
  */
-fun <TT: SiRecord> SiSearchInterface<TT>.phraseSearch(phrase: String, field: SiField = schema.defaultSearchField): SiHits<TT> =
+suspend fun <TT: SiRecord> SiSearchInterface<TT>.phraseSearch(phrase: String, field: SiField = schema.defaultSearchField): SiHits<TT> =
     PhraseQueryBuilder(
         this.schema, field, phrase
     ).build().let {

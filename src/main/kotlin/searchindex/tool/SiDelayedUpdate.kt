@@ -10,6 +10,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import com.tellusr.searchindex.exception.messageAndCrumb
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.util.*
 
@@ -22,7 +27,10 @@ import java.util.*
  *
  * @property delayMillis The delay in milliseconds before an update is performed.
  */
-class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
+class SiDelayedUpdate<TT : SiRecord>(
+    val searchIndex: SiSearchIndex<TT>,
+    val taskContext: CoroutineDispatcher = Dispatchers.IO
+) {
     private var updateQueue: LinkedList<TT> = LinkedList()
     private var lastUpdateQueueInsert: Instant = Instant.now()
 
@@ -31,35 +39,33 @@ class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
     private val queueMutex = Mutex()
 
     private suspend fun delayedUpdate() {
-        coroutineScope {
-            // Start a delayed update if none is already running
-            if (updateMutex.tryLock()) {
-                launch(Job()) {
-                    try {
-                        // Do not insert until there has been no inserts for two seconds, unless
-                        // there is a reasonable number of entries to store
-                        while (
-                            lastUpdateQueueInsert.plusMillis(250).isAfter(Instant.now())
-                            || (lastUpdateQueueInsert.plusSeconds(2).isAfter(Instant.now())
-                                    && updateQueue.size < 1000
-                                    )
-                        ) {
-                            delay(250)
-                        }
-
-                        val oldQueue = updateQueue
-                        queueMutex.withLock {
-                            updateQueue = LinkedList()
-                        }
-                        logger.info("Delayed update of ${oldQueue.size} records started")
-
-                        // Write updates to the index
-                        searchIndex.update(oldQueue)
-                        logger.info("Delayed update of ${oldQueue.size} records finished")
-                    } finally {
-                        //
-                        updateMutex.unlock()
+        // Start a delayed update if none is already running
+        if (updateMutex.tryLock()) {
+            withContext(taskContext) {
+                try {
+                    // Do not insert until there has been no inserts for two seconds, unless
+                    // there is a reasonable number of entries to store
+                    while (
+                        lastUpdateQueueInsert.plusMillis(250).isAfter(Instant.now())
+                        || (lastUpdateQueueInsert.plusSeconds(2).isAfter(Instant.now())
+                                && updateQueue.size < 1000
+                                )
+                    ) {
+                        delay(250)
                     }
+
+                    val oldQueue = updateQueue
+                    queueMutex.withLock {
+                        updateQueue = LinkedList()
+                    }
+                    logger.info("Delayed update of ${oldQueue.size} records started")
+
+                    // Write updates to the index
+                    searchIndex.update(oldQueue)
+                    logger.info("Delayed update of ${oldQueue.size} records finished")
+                } finally {
+                    //
+                    updateMutex.unlock()
                 }
             }
         }

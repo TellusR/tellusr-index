@@ -37,7 +37,7 @@ class ExactQueryBuilder(val schema: SiSchema, val field: SiField, val q: String)
  * @param field The field to search in, defaults to schema's default search field
  * @return SiHits<TT> Search results containing matching records
  */
-fun <TT: SiRecord> SiSearchInterface<TT>.exactSearch(q: String, field: SiField = schema.defaultSearchField): SiHits<TT> =
+suspend fun <TT: SiRecord> SiSearchInterface<TT>.exactSearch(q: String, field: SiField = schema.defaultSearchField): SiHits<TT> =
     ExactQueryBuilder(
         this.schema, field, q
     ).build().let {

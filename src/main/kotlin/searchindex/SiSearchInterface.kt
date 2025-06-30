@@ -20,14 +20,14 @@ interface SiSearchInterface<TT : SiRecord> {
      * @param rows The maximum number of records to return. Defaults to SiSchema.ALL.
      * @return A SiHits object containing the matched records for the requested page.
      */
-    fun all(start: Int = 0, rows: Int = SiSchema.ALL): SiHits<TT>
+    suspend fun all(start: Int = 0, rows: Int = SiSchema.ALL): SiHits<TT>
 
     /**
      * Returns the total number of records in the index.
      *
      * @return The number of records currently stored in the index.
      */
-    val size: Int
+    suspend fun size(): Int
 
     /**
      * Searches for a record by its unique identifier.
@@ -35,7 +35,7 @@ interface SiSearchInterface<TT : SiRecord> {
      * @param q The unique identifier of the record to search for.
      * @return The record that matches the given identifier, or null if no such record exists.
      */
-    fun byId(q: String): TT?
+    suspend fun byId(q: String): TT?
 
     /**
      * Searches for records that match the given query criteria.
@@ -44,7 +44,7 @@ interface SiSearchInterface<TT : SiRecord> {
      * @param rows Max number of records to return
      * @return A list of records matching the search criteria.
      */
-    fun search(query: Query, start: Int = 0, rows: Int = SiSchema.ALL, sort: Sort? = schema.defaultSort): SiHits<TT>
+    suspend fun search(query: Query, start: Int = 0, rows: Int = SiSchema.ALL, sort: Sort? = schema.defaultSort): SiHits<TT>
 
 
     /**

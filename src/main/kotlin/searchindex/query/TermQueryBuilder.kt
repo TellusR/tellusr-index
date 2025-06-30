@@ -28,7 +28,7 @@ class TermQueryBuilder(
     override fun build(): Query = BooleanQueryBuilder(queries, clause).build()
 }
 
-fun <TT : SiRecord> SiSearchInterface<TT>.termSearch(
+suspend fun <TT : SiRecord> SiSearchInterface<TT>.termSearch(
     phrase: String,
     field: SiField = schema.defaultSearchField,
     clause: BooleanClause.Occur = BooleanClause.Occur.SHOULD

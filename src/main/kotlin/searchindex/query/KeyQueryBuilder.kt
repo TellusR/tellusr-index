@@ -60,7 +60,7 @@ class KeyQueryBuilder(
  * @param field The field to search within, defaults to the schema's ID field
  * @return A [SiHits] object containing the matching documents and search metadata
  */
-fun <TT : SiRecord> SiSearchInterface<TT>.keySearch(phrase: String, field: SiField = schema.idField): SiHits<TT> = KeyQueryBuilder(
+suspend fun <TT : SiRecord> SiSearchInterface<TT>.keySearch(phrase: String, field: SiField = schema.idField): SiHits<TT> = KeyQueryBuilder(
     this.schema, field, phrase
 ).build().let {
     this.search(it) as SiHits<TT>
@@ -87,7 +87,7 @@ fun SiSchema.keyQuery(
  * @param q The query to execute for finding the source documents
  * @return A [Query] that will match documents containing the extracted IDs in their foreign key field
  */
-fun <TT : SiRecord> SiSearchInterface<TT>.foreignKeyQuerySearch(foreignKey: SiField, q: Query): Query {
+suspend fun <TT : SiRecord> SiSearchInterface<TT>.foreignKeyQuerySearch(foreignKey: SiField, q: Query): Query {
     val idField = schema.idField
     val docs = search(q, 0, Int.MAX_VALUE, null).docs
     return docs.mapNotNull {

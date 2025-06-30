@@ -9,10 +9,10 @@ import com.tellusr.searchindex.util.getAutoNamedLogger
 
 interface SiConstraint {
     val name: String
-    fun validate(searchIndex: SiSearchIndex<*>): Boolean
-    fun mayInsert(record: SiRecord, searchIndex: SiSearchIndex<*>): Boolean = true
+    suspend fun validate(searchIndex: SiSearchIndex<*>): Boolean
+    suspend fun mayInsert(record: SiRecord, searchIndex: SiSearchIndex<*>): Boolean = true
 
-    fun validateWithThrow(searchIndex: SiSearchIndex<*>) {
+    suspend fun validateWithThrow(searchIndex: SiSearchIndex<*>) {
         if (validate(searchIndex)) {
             throw TellusRIndexException.ConstraintException(
                 "Constraint $name error in ${searchIndex.qualifiedName()}"
@@ -23,13 +23,13 @@ interface SiConstraint {
 
 
 class SiConstraintUnique(val field: SiField) : SiConstraint {
-    override fun validate(searchIndex: SiSearchIndex<*>): Boolean = countDuplicates(searchIndex) > 0
+    override suspend fun validate(searchIndex: SiSearchIndex<*>): Boolean = countDuplicates(searchIndex) > 0
 
     override val name: String
         get() = "unique"
 
 
-    private fun countDuplicates(searchIndex: SiSearchIndex<*>): Int =
+    private suspend fun countDuplicates(searchIndex: SiSearchIndex<*>): Int =
         searchIndex.all().docs.map {
             it.getValue(field)
         }.groupBy {
@@ -43,7 +43,7 @@ class SiConstraintUnique(val field: SiField) : SiConstraint {
         }
 
 
-    override fun mayInsert(record: SiRecord, searchIndex: SiSearchIndex<*>): Boolean {
+    override suspend fun mayInsert(record: SiRecord, searchIndex: SiSearchIndex<*>): Boolean {
         val fieldValue = record.getValue(field)
         val matches = searchIndex.exactSearch(fieldValue.toString(), field)
         return matches.docs.firstOrNull {

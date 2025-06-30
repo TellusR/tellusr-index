@@ -49,7 +49,7 @@ class VectorQueryBuilder(
  * @param maxRows The maximum number of similar vectors to retrieve, default is 10.
  * @return A [SiHits] object containing the search results with vector similarity matches.
  */
-fun <TT: SiRecord> SiSearchInterface<TT>.vectorSearch(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10): SiHits<TT> =
+suspend fun <TT: SiRecord> SiSearchInterface<TT>.vectorSearch(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10): SiHits<TT> =
     VectorQueryBuilder(
         this.schema, field, vectorQuery, maxRows
     ).build().let {
