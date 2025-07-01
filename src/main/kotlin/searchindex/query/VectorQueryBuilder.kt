@@ -54,7 +54,7 @@ class VectorQueryBuilder(
  */
 suspend fun <TT: SiRecord> SiSearchInterface<TT>.vectorSearch(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10, filterQuery: Query? = null): SiHits<TT> =
     VectorQueryBuilder(
-        this.schema, field, vectorQuery, maxRows
+        this.schema, field, vectorQuery, maxRows, filterQuery
     ).build().let {
         this.search(it) as SiHits<TT>
     }
@@ -62,5 +62,5 @@ suspend fun <TT: SiRecord> SiSearchInterface<TT>.vectorSearch(vectorQuery: Float
 
 fun SiSchema.vectorQuery(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10, filterQuery: Query? = null): Query =
     VectorQueryBuilder(
-        this, field, vectorQuery, maxRows
+        this, field, vectorQuery, maxRows, filterQuery
     ).build()
