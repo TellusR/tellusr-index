@@ -48,7 +48,7 @@ class StandardQueryBuilder(val schema: SiSchema, val field: SiField, val phrase:
  *             Defaults to the schema's default search field.
  * @return A [SiHits] object containing the search results matching the query.
  */
-fun <TT: SiRecord> SiSearchInterface<TT>.standardSearch(phrase: String, field: SiField = schema.defaultSearchField): SiHits<TT> =
+suspend fun <TT: SiRecord> SiSearchInterface<TT>.standardSearch(phrase: String, field: SiField = schema.defaultSearchField): SiHits<TT> =
     StandardQueryBuilder(
         this.schema, this.schema.defaultSearchField, phrase
     ).build().let {

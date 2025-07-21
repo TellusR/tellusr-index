@@ -7,6 +7,11 @@ import kotlinx.coroutines.sync.withLock
 import com.tellusr.searchindex.exception.messageAndCrumb
 import com.tellusr.searchindex.exception.stackTraceString
 import com.tellusr.searchindex.query.StandardQueryBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.*
 import org.apache.lucene.index.IndexReader
@@ -174,37 +179,42 @@ open class SiSearchIndex<TT : SiRecord>(
         searchManager.maybeRefreshBlocking()
     }
 
-    private fun <TT> searcher(task: (indexSearcher: IndexSearcher) -> TT): TT {
-        val sm = searchManager
-        val reader = try {
-            sm.acquire()
-        } catch (ex: NullPointerException) {
-            logger.trace("{}", ex.stackTraceString)
-            initIndex()
-            sm.acquire()
-        }
-        val result = try {
-            task(reader)
-        } finally {
-            sm.release(reader)
-        }
+    private suspend fun <TT> searcher(task: (indexSearcher: IndexSearcher) -> TT): TT {
+        val result = withContext<TT>(Dispatchers.IO) {
+            val sm = searchManager
+            val reader = try {
+                sm.acquire()
+            } catch (ex: NullPointerException) {
+                logger.trace("{}", ex.stackTraceString)
+                initIndex()
+                sm.acquire()
+            }
+            try {
+                task(reader)
+            } finally {
+                sm.release(reader)
+            }
 
+        }
         return result
     }
 
 
-    private suspend fun writer(openMode: OpenMode = OpenMode.CREATE_OR_APPEND, task: (indexWriter: IndexWriter) -> Unit) =
-        writeMutex.withLock {
-            val directory: Directory = FSDirectory.open(schema.path(name))
-            val analyzer: Analyzer = schema.analyser()
+    private suspend fun writer(
+        openMode: OpenMode = OpenMode.CREATE_OR_APPEND,
+        task: (indexWriter: IndexWriter) -> Unit
+    ) = writeMutex.withLock {
+        val directory: Directory = FSDirectory.open(schema.path(name))
+        val analyzer: Analyzer = schema.analyser()
 
-            val config = IndexWriterConfig(analyzer).apply {
-                this.openMode = openMode
-                this.ramBufferSizeMB = 16.0
-                this.maxBufferedDocs = 5000
-                this.similarity = similarity
-            }
+        val config = IndexWriterConfig(analyzer).apply {
+            this.openMode = openMode
+            this.ramBufferSizeMB = 16.0
+            this.maxBufferedDocs = 5000
+            this.similarity = similarity
+        }
 
+        withContext(Dispatchers.IO) {
             val writer = IndexWriter(directory, config)
             try {
                 task(writer)
@@ -215,6 +225,7 @@ open class SiSearchIndex<TT : SiRecord>(
                 ++writeCounter
             }
         }
+    }
 
 
     /**
@@ -223,7 +234,7 @@ open class SiSearchIndex<TT : SiRecord>(
      *
      * @return A list of all documents in the index.
      */
-    override fun all(start: Int, rows: Int): SiHits<TT> = search(MatchAllDocsQuery(), start, rows)
+    override suspend fun all(start: Int, rows: Int): SiHits<TT> = search(MatchAllDocsQuery(), start, rows)
 
 
     /**
@@ -234,10 +245,10 @@ open class SiSearchIndex<TT : SiRecord>(
      *
      * @return The total count of documents in the index.
      */
-    override val size: Int
-        get() = searcher { searcher ->
-            searcher.count(MatchAllDocsQuery())
-        }
+    override suspend fun size(): Int = searcher {
+        searcher ->
+        searcher.count(MatchAllDocsQuery())
+    }
 
 
     /**
@@ -246,7 +257,7 @@ open class SiSearchIndex<TT : SiRecord>(
      *
      * @return True if the index contains no documents, false otherwise.
      */
-    fun isEmpty(): Boolean = (size == 0)
+    suspend fun isEmpty(): Boolean = (size() == 0)
 
 
     /**
@@ -255,7 +266,7 @@ open class SiSearchIndex<TT : SiRecord>(
      * @param q The ID of the document to retrieve.
      * @return The document with the specified ID, or null if no such document exists.
      */
-    override fun byId(q: String): TT? =
+    override suspend fun byId(q: String): TT? =
         search(schema.idQuery(q), 0, 1, null).docs.firstOrNull()
 
 
@@ -269,7 +280,7 @@ open class SiSearchIndex<TT : SiRecord>(
      * @param sort (Optional) The sorting criteria for the results.
      * @return A SiHits instance containing the search results.
      */
-    override fun search(query: Query, start: Int, rows: Int, sort: Sort?): SiHits<TT> {
+    override suspend fun search(query: Query, start: Int, rows: Int, sort: Sort?): SiHits<TT> {
         val rows = start + rows
         logger.trace("Searching {}: {}", schema.path(name), query)
         return searcher<SiHits<TT>> { searcher ->
@@ -281,11 +292,10 @@ open class SiSearchIndex<TT : SiRecord>(
                 schema.fromDoc(doc) as TT
             }
 
-            if(start < res.size) {
+            if (start < res.size) {
                 val takeCount = min(rows, res.size - start)
                 SiHits(docs.totalHits, res.drop(start).take(takeCount))
-            }
-            else {
+            } else {
                 SiHits(docs.totalHits, emptyList())
 
             }
@@ -303,7 +313,7 @@ open class SiSearchIndex<TT : SiRecord>(
      *                    Defaults to the schema's default search field.
      * @return A SiHits object containing the search results and total hit count
      */
-    fun search(query: String, defaultField: SiField = schema.defaultSearchField): SiHits<TT> =
+    suspend fun search(query: String, defaultField: SiField = schema.defaultSearchField): SiHits<TT> =
         StandardQueryBuilder(schema, defaultField, query).build().let {
             search(it, start = 0, rows = SiSchema.ALL)
         }
@@ -413,7 +423,7 @@ open class SiSearchIndex<TT : SiRecord>(
         }
     }
 
-    
+
     /**
      * Updates multiple Lucene Document objects in the search index in a single transaction.
      * This method works directly with low-level Lucene Document objects, not SiRecord instances.
@@ -469,19 +479,19 @@ open class SiSearchIndex<TT : SiRecord>(
     }
 
 
-    fun validateWithException() {
+    suspend fun validateWithException() {
         schema.constraints.forEach { it.validateWithThrow(this) }
     }
 
 
-    fun mayInsert(record: TT): Boolean {
+    suspend fun mayInsert(record: TT): Boolean {
         val failed = schema.constraints.filter { !it.validate(this) }
         logger.warn("The ${failed.joinToString { it.name }} constraint(s) failed for insert in ${schema.path(name)} for record ${record.toLogString()}")
         return failed.isNotEmpty()
     }
 
 
-    fun dump(maxLength: Int = 80): String =
+    suspend fun dump(maxLength: Int = 80): String =
         all().docs.joinToString("\n") {
             val line = it.toLogString()
             if (line.length > maxLength) {

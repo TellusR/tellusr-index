@@ -3,13 +3,16 @@ package com.tellusr.searchindex.tool
 import com.tellusr.searchindex.SiRecord
 import com.tellusr.searchindex.SiSearchIndex
 import com.tellusr.searchindex.util.getAutoNamedLogger
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import com.tellusr.searchindex.exception.messageAndCrumb
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.util.*
 
@@ -22,7 +25,9 @@ import java.util.*
  *
  * @property delayMillis The delay in milliseconds before an update is performed.
  */
-class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
+class SiDelayedUpdate<TT : SiRecord>(
+    val searchIndex: SiSearchIndex<TT>
+) {
     private var updateQueue: LinkedList<TT> = LinkedList()
     private var lastUpdateQueueInsert: Instant = Instant.now()
 
@@ -31,9 +36,9 @@ class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
     private val queueMutex = Mutex()
 
     private suspend fun delayedUpdate() {
-        coroutineScope {
-            // Start a delayed update if none is already running
-            if (updateMutex.tryLock()) {
+        // Start a delayed update if none is already running
+        if (updateMutex.tryLock()) {
+            coroutineScope {
                 launch(Job()) {
                     try {
                         // Do not insert until there has been no inserts for two seconds, unless
@@ -41,8 +46,7 @@ class SiDelayedUpdate<TT : SiRecord>(val searchIndex: SiSearchIndex<TT>) {
                         while (
                             lastUpdateQueueInsert.plusMillis(250).isAfter(Instant.now())
                             || (lastUpdateQueueInsert.plusSeconds(2).isAfter(Instant.now())
-                                    && updateQueue.size < 1000
-                                    )
+                                    && updateQueue.size < 1000)
                         ) {
                             delay(250)
                         }

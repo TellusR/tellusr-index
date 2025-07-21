@@ -23,7 +23,8 @@ class VectorQueryBuilder(
     val schema: SiSchema,
     val field: SiField?,
     val vectorQuery: FloatArray,
-    val maxRows: Int = 10
+    val maxRows: Int = 10,
+    val filterQuery: Query? = null,
 ): SiQueryBuilder {
     /**
      * Builds and returns a Lucene query for vector similarity search.
@@ -34,7 +35,9 @@ class VectorQueryBuilder(
         return (field ?: schema.fields.firstOrNull {
             it.isType(SiFieldType.Vector)
         })?.let { vectorField ->
-            KnnFloatVectorQuery(vectorField.primary(), vectorQuery, maxRows)
+            filterQuery?.let { filter ->
+                KnnFloatVectorQuery(vectorField.primary(), vectorQuery, maxRows, filter)
+            } ?: KnnFloatVectorQuery(vectorField.primary(), vectorQuery, maxRows)
         } ?: MatchNoDocsQuery()
     }
 }
@@ -49,15 +52,15 @@ class VectorQueryBuilder(
  * @param maxRows The maximum number of similar vectors to retrieve, default is 10.
  * @return A [SiHits] object containing the search results with vector similarity matches.
  */
-fun <TT: SiRecord> SiSearchInterface<TT>.vectorSearch(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10): SiHits<TT> =
+suspend fun <TT: SiRecord> SiSearchInterface<TT>.vectorSearch(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10, filterQuery: Query? = null): SiHits<TT> =
     VectorQueryBuilder(
-        this.schema, field, vectorQuery, maxRows
+        this.schema, field, vectorQuery, maxRows, filterQuery
     ).build().let {
         this.search(it) as SiHits<TT>
     }
 
 
-fun SiSchema.vectorQuery(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10): Query =
+fun SiSchema.vectorQuery(vectorQuery: FloatArray, field: SiField? = null, maxRows: Int = 10, filterQuery: Query? = null): Query =
     VectorQueryBuilder(
-        this, field, vectorQuery, maxRows
+        this, field, vectorQuery, maxRows, filterQuery
     ).build()
