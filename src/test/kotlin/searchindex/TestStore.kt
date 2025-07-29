@@ -8,13 +8,14 @@ import org.apache.lucene.document.Document
 // Used for testing and demo purposes only.
 interface TestStore {
     enum class Fields : SiField {
-        Id, Instruction, Context, Response, Category, Language, SourceId, MetaData, Vectorized;
+        Id, Instruction, Context, Response, Category, Categories, Language, SourceId, MetaData, Vectorized;
 
 
         override fun primary(): String = name
         override fun fieldType(): Set<SiFieldType> = when (this) {
             Id -> setOf(SiFieldType.UniqueId)
             Category -> setOf(SiFieldType.Keyword)
+            Categories -> setOf(SiFieldType.Keyword)
             SourceId -> setOf(SiFieldType.ForeignKey)
             Vectorized -> setOf(SiFieldType.Vector)
             else -> setOf(SiFieldType.Auto)
@@ -39,13 +40,28 @@ interface TestStore {
         var sourceId: String? = null,
         var json: JsonElement? = null,
         var vectorized: FloatArray? = null,
+        var categories: MutableList<String> = mutableListOf(),
     ) : SiRecord {
+        constructor(id: String): this(
+            id,
+            "instruction $id",
+            "context $id",
+            "response $id",
+            "a/$id",
+            "language $id",
+            "sourceId $id",
+            null,
+            null,
+            mutableListOf("a/$id", "b/$id", "c/$id"),
+            )
+
         constructor(doc: Document) : this(
             id = doc.get(Fields.Id.primary()),
             instruction = doc.get(Fields.Instruction.primary()),
             context = doc.get(Fields.Context.primary()),
             response = doc.get(Fields.Response.primary()),
             category = doc.get(Fields.Category.primary()),
+            categories = doc.getValues(Fields.Categories.primary()).toMutableList(),
             language = doc.get(Fields.Language.primary()),
             sourceId = doc.get(Fields.SourceId.primary()),
             json = doc.get(Fields.MetaData.primary())?.let {
@@ -62,6 +78,7 @@ interface TestStore {
             Fields.Context -> context
             Fields.Response -> response
             Fields.Category -> category
+            Fields.Categories -> categories
             Fields.Language -> language
             Fields.SourceId -> sourceId
             Fields.MetaData -> json
@@ -76,6 +93,11 @@ interface TestStore {
                 Fields.Context -> context = (value as? String)
                 Fields.Response -> response = (value as? String)
                 Fields.Category -> category = (value as? String)
+                Fields.Categories -> categories = when (value) {
+                    is String -> value.split(',').map { it.trim() }.toMutableList()
+                    is List<*> -> value.mapNotNull { it as? String }.toMutableList()
+                    else -> mutableListOf()
+                }
                 Fields.Language -> language = (value as? String)
                 Fields.SourceId -> sourceId = (value as? String)
                 Fields.MetaData -> json = when (value) {

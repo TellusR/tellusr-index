@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonElement
 import org.apache.lucene.document.*
 import org.apache.lucene.index.IndexableField
 import org.apache.lucene.util.BytesRef
+import java.security.Key
 import java.time.Instant
 
 
@@ -43,12 +44,32 @@ enum class SiFieldType {
      */
     fun toLuceneFields(key: String, value: Any?): List<IndexableField> =
         when (this) {
-            UniqueId, Keyword, ForeignKey -> value?.let {
+            UniqueId  -> value?.let {
                 listOf(
                     StringField(key, value.toString(), Field.Store.YES),
                     SortedDocValuesField(key, BytesRef(value.toString()))
                 )
             } ?: listOf()
+
+            Keyword, ForeignKey -> when (value) {
+                is Collection<*> -> {
+                    (value as? List<*>)?.mapNotNull {
+                        it.toString()
+                    }?.map {
+                        listOf(
+                            StringField(key, it, Field.Store.YES),
+                        )
+                    }?.flatten() ?: listOf()
+
+                }
+
+                else -> value?.let {
+                    listOf(
+                        StringField(key, value.toString(), Field.Store.YES),
+                        SortedDocValuesField(key, BytesRef(value.toString()))
+                    )
+                } ?: listOf()
+            }
 
             Auto, Text, Vector, DefaultSearch -> Companion.toLuceneFields(key, value)
 
@@ -57,7 +78,7 @@ enum class SiFieldType {
             SortKey -> listOf(
                 SortedDocValuesField(SiRecord.sortField.primary(), BytesRef(value.toString().lowercase()))
             )
-       }
+        }
 
 
     companion object {
@@ -84,6 +105,7 @@ enum class SiFieldType {
                 is JsonExporter -> value.jsonExport().let {
                     listOf(TextField(key, jsonEncoder.encodeToString(it), Field.Store.YES))
                 }
+
                 is Collection<*> -> value.flatMap { toLuceneFields(key, it) }.toList()
                 is FloatArray -> {
                     listOf(

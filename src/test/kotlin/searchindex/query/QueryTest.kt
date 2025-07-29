@@ -134,7 +134,16 @@ class QueryTest {
     fun `test key query on category field`() {
         runBlocking {
             val id = "category1"
-            index.add(TestStore.Record(id, "instruction", "context", "response", "test-category", null))
+            index.add(
+                TestStore.Record(
+                    id,
+                    "instruction",
+                    "context",
+                    "response",
+                    "test-category",
+                    null
+                )
+            )
 
             val results = index.keySearch("test-category", TestStore.Fields.Category)
 
@@ -155,6 +164,21 @@ class QueryTest {
 
             assertTrue(results.isNotEmpty())
             assertEquals(id, results.docs.first().id)
+        }
+    }
+
+    @Test
+    fun categoriesTest() {
+        runBlocking {
+            val record = TestStore.Record("cat1")
+            listOf(
+                record.id, "cat2", "cat3"
+            ).forEach {
+                index.add(TestStore.Record(it))
+            }
+
+            val results = index.keySearch(record.categories.first(), TestStore.Fields.Categories)
+            assertTrue(results.isNotEmpty())
         }
     }
 
