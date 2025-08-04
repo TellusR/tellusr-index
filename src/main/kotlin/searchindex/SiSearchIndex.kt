@@ -371,7 +371,9 @@ open class SiSearchIndex<TT : SiRecord>(
      * @param records The list of records to update in the index.
      */
     override suspend fun update(records: List<SiRecord>) {
-        update(records.map { it.toLuceneDoc() })
+        update(records.map {
+            it.toLuceneDoc()
+        })
     }
 
 
@@ -443,11 +445,12 @@ open class SiSearchIndex<TT : SiRecord>(
             docs.forEach { doc ->
                 try {
                     doc.get(schema.idField.primary()).let { id ->
-                        logger.trace(id)
+                        logger.trace("Updating id: $id")
                         if (id != null) {
                             indexWriter.deleteDocuments(
                                 Term(schema.idField.primary(), id)
                             )
+                            logger.trace("Deleting id: $id")
                         }
                     }
                     ensureDocumentId(doc)

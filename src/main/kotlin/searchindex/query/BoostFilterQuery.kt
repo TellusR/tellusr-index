@@ -15,6 +15,7 @@ class BoostFilterQuery(val schema: SiSchema, val query: Query, val filterQueries
         listOf(SiFilterClause(filterQuery))
     )
 
+
     override fun build(): Query =
         filterQueries?.ifEmpty { null }?.let { filterList ->
             BooleanQuery.Builder().also { builder ->
@@ -24,7 +25,6 @@ class BoostFilterQuery(val schema: SiSchema, val query: Query, val filterQueries
                 }
             }.build()
         } ?: query
-
 }
 
 
