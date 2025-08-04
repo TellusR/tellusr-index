@@ -59,6 +59,7 @@ class SiDelayedUpdate<TT : SiRecord>(
                         oldQueue.chunked(12500).forEach {
                             // Chunk to avoid OOM
                             searchIndex.update(it)
+                            logger.debug("Updated chunk of ${it.size} records")
                         }
                         logger.info("Delayed update of ${oldQueue.size} records finished")
                     } finally {
