@@ -445,13 +445,13 @@ open class SiSearchIndex<TT : SiRecord>(
             docs.forEach { doc ->
                 try {
                     doc.get(schema.idField.primary()).let { id ->
-                        logger.trace("Updating id: $id")
                         if (id != null) {
                             indexWriter.deleteDocuments(
                                 Term(schema.idField.primary(), id)
                             )
                             logger.trace("Deleting id: $id")
                         }
+                        logger.trace("Updating id: $id")
                     }
                     ensureDocumentId(doc)
                     indexWriter.addDocument(doc)

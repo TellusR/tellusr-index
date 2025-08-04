@@ -41,29 +41,39 @@ class SiDelayedUpdate<TT : SiRecord>(
             coroutineScope {
                 launch(Job()) {
                     try {
-                        // Do not insert until there has been no inserts for two seconds, unless
-                        // there is a reasonable number of entries to store
-                        while (lastUpdateQueueInsert.plusSeconds(1).isAfter(Instant.now())
-                            && updateQueue.size < 10000
-                        ) {
-                            delay(250)
-                        }
+                        var isMore = true
+                        while (isMore) {
+                            isMore = false
 
-                        val oldQueue = updateQueue
-                        queueMutex.withLock {
-                            updateQueue = LinkedList()
-                        }
-                        logger.info("Delayed update of ${oldQueue.size} records started")
+                            // Do not insert until there has been no inserts for two seconds, unless
+                            // there is a reasonable number of entries to store
+                            while (lastUpdateQueueInsert.plusSeconds(1).isAfter(Instant.now())
+                                && updateQueue.size < 5000
+                            ) {
+                                delay(250)
+                            }
 
-                        // Write updates to the index
-                        oldQueue.chunked(12500).forEach {
-                            // Chunk to avoid OOM
-                            searchIndex.update(it)
-                            logger.debug("Updated chunk of ${it.size} records")
+                            val oldQueue = updateQueue
+                            queueMutex.withLock {
+                                updateQueue = LinkedList()
+                            }
+                            logger.info("Delayed update of ${oldQueue.size} records started")
+
+                            // Write updates to the index
+                            oldQueue.chunked(25000).forEach {
+                                // Chunk to avoid OOM
+                                searchIndex.update(it)
+                                logger.debug("Updated chunk of ${it.size} records")
+                            }
+                            logger.info("Delayed update of ${oldQueue.size} records finished")
+
+                            queueMutex.withLock {
+                                isMore = updateQueue.isNotEmpty()
+                            }
                         }
-                        logger.info("Delayed update of ${oldQueue.size} records finished")
                     } finally {
                         //
+                        logger.info("Delayed update finished all")
                         updateMutex.unlock()
                     }
                 }
@@ -108,7 +118,7 @@ class SiDelayedUpdate<TT : SiRecord>(
     }
 
     companion object {
-        val logger = getAutoNamedLogger()
+        private val logger = getAutoNamedLogger()
     }
 }
 
