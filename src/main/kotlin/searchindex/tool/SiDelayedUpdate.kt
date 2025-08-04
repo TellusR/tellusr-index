@@ -43,10 +43,8 @@ class SiDelayedUpdate<TT : SiRecord>(
                     try {
                         // Do not insert until there has been no inserts for two seconds, unless
                         // there is a reasonable number of entries to store
-                        while (
-                            lastUpdateQueueInsert.plusMillis(250).isAfter(Instant.now())
-                            || (lastUpdateQueueInsert.plusSeconds(2).isAfter(Instant.now())
-                                    && updateQueue.size < 1000)
+                        while (lastUpdateQueueInsert.plusSeconds(1).isAfter(Instant.now())
+                            && updateQueue.size < 10000
                         ) {
                             delay(250)
                         }
@@ -58,7 +56,10 @@ class SiDelayedUpdate<TT : SiRecord>(
                         logger.info("Delayed update of ${oldQueue.size} records started")
 
                         // Write updates to the index
-                        searchIndex.update(oldQueue)
+                        oldQueue.chunked(12500).forEach {
+                            // Chunk to avoid OOM
+                            searchIndex.update(it)
+                        }
                         logger.info("Delayed update of ${oldQueue.size} records finished")
                     } finally {
                         //
